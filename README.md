@@ -16,7 +16,7 @@ There is a commited version which is not the same as the one in the folder
 
 ## Tasks to do
 Add temperature sensor into controller
-Select GPIO for outputs
+Select GPIO for outputs	....................................................done
 Setup cron job
 Change allreadings to NAS
 Add fields into NAS SQL

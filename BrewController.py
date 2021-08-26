@@ -1,25 +1,38 @@
+# Fermentation Batch Controller
+#---------------------------------------
+# This program will output to heating and cooling devices to keep the brew at a set point.
+# This program will execute using the cron task
+# LEDs are driven to indicate if the temperature is under control.
+# The brew duration is monitored, and prompts are raised to measure sg and bottle.
+# Data for the brew including the setpoint, timings, and control settings are retrieved from a master database.
+# A local copy of these values is stored in case the link to the external database is lost
+# Each program scan, the temperature and control data is output back to an sql database
+
 import os
 import csv
+import TemperatureSensor
+import Sql
 from pathlib import Path
 import RPi.GPIO as GPIO
 from datetime import datetime
 from datetime import timedelta
 
 # Variable Declarations
-#FilePath ='C:\\Users\\Martin\\Documents\\Python Stuff\\'
+TISensor = TemperatureSensor.TemperatureSensor()
 FilePath = str(Path.home()) + '/brew/'
+now = datetime.now()
 RedGP = 14
 GrnGP = 15
 BluGP = 18
-TIGP = 2
-HtrGP = 3
-ClrGP = 4
+HtrGP = 2
+ClrGP = 3
 
 # Function Declarations
 def WritePreviousRecord(FileName, DataStr, TypeStr):
     file = open(FileName, TypeStr)
     file.write(DataStr)
     file.close()
+
 def SetLED(LEDColour):
     if LEDColour == 'Red':
         GPIO.output(RedGP,1)
@@ -33,6 +46,7 @@ def SetLED(LEDColour):
         GPIO.output(RedGP,0)
         GPIO.output(GrnGP,0)
         GPIO.output(BluGP,1)
+
 def SetOP(ContrlMode):
     if ContrlMode == 'Heat':
         GPIO.output(HtrGP,1)
@@ -44,55 +58,63 @@ def SetOP(ContrlMode):
         GPIO.output(HtrGP,0)
         GPIO.output(ClrGP,0)
 
+# Setup IO
+# GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(HtrGP,GPIO.OUT) # Heating
+GPIO.setup(ClrGP,GPIO.OUT) # Cooling
+GPIO.setup(RedGP,GPIO.OUT) # Red LED
+GPIO.setup(GrnGP,GPIO.OUT) # Green LED
+GPIO.setup(BluGP,GPIO.OUT) # Blue LED
+
 #def ReadPreviousRecord(FileName):
 #    with open(FileName) as csvfile:
 #        csvreader = csv.reader(csvfile, delimiter=',')
 #        for row in csvreader:
 #            csvrow = .join(row)
 #    return csvrow
-def getCPUtemp():
-    cTemp = os.popen('vcgencmd measure_temp').readline()
-    return float(cTemp.replace("temp=","").replace("'C\n",""))
 
-# Read Brew Data from File (Name, StartTime, SGSampleTime (days), BottleTime (days), InitialSP, dbHigh, dbLow, HighDevTP, LowDevTP)
+# Read Brew Data from File (id, brew_name, start_time, sg_sample_time, bottle_time, set_point, deadband_high, deadband_low, high_trip_point, low_trip_point)
 # If this File is not Found, run NewBatch.py to Start a new brew
 #BatchData = ReadPreviousRecord('C:\\Users\\Martin\\Documents\\Python Stuff\\ThisBatch.CSV')
-with open(FilePath + 'ThisBatch.csv') as csvfile:
-    csvreader = csv.reader(csvfile, delimiter=',')
-    for row in csvreader:
-        SGSamplesec = float(row[2]) * 86400
-        print('SGSamplesec = '+str(SGSamplesec))
-        BottleTime = float(row[3]) * 86400
-        print('BottleTime = '+str(BottleTime))
-        StartTime = datetime.strptime(row[1], "%d/%m/%Y %H:%M:%S")
-        print('StartTime = '+str(StartTime))
-        SP = float(row[4])
-        print('SP = '+str(SP))
-        dbHigh = float(row[5])
-        print('dbHigh = '+str(dbHigh))
-        dbLow = float(row[6])
-        print('dbLow = '+str(dbLow))
-        HighDevTP = float(row[7])
-        print('HighDevTP = '+str(HighDevTP))
-        LowDevTP = float(row[8])
-        print('LowDevTP = '+str(LowDevTP))
+with Sql.BrewingDatabase() as BrewData:
+    BrewID = int(BrewData.id())
+    print('ID = '+str(BrewID))
+    SGSamplesec = float(BrewData.sg_sample_time()) * 86400
+    print('SGSamplesec = '+str(SGSamplesec))
+    BottleTimesec = float(BrewData.bottle_time()) * 86400
+    print('BottleTime = '+str(BottleTime))
+    StartTime = datetime.strptime(BrewData.start_time(), "%d/%m/%Y %H:%M:%S")
+    print('StartTime = '+str(StartTime))
+    SP = float(BrewData.set_point())
+    print('SP = '+str(SP))
+    dbHigh = float(BrewData.deadband_high())
+    print('dbHigh = '+str(dbHigh))
+    dbLow = float(BrewData.deadband_low())
+    print('dbLow = '+str(dbLow))
+    HighDevTP = float(BrewData.high_trip_point())
+    print('HighDevTP = '+str(HighDevTP))
+    LowDevTP = float(BrewData.low_trip_point())
+    print('LowDevTP = '+str(LowDevTP))
+
+# Read Previous Record from local file (Time, id, Temperature, SP, TempBand, TimePeriod)
 with open(FilePath + 'LastReadings.csv') as csvfile:
     csvreader = csv.reader(csvfile, delimiter=',')
     for row in csvreader:
-        OldOP = int(row[3])
+        Oldid = row[1]
+        print('Oldid = '+str(Oldid))
+        OldSP = row[3]
+        print('OldSP = '+str(OldSP))
+        OldOP = int(row[4])
         print('OldOP = '+str(OldOP))
-        OldTP = int(row[4])
+        OldTP = int(row[5])
         print('OldTP = '+str(OldTP))
 
-# Read Previous Record from file (Time, Temperature, SP, TempBand, TimePeriod)
-#LastData = ReadPreviousRecord('C:\\Users\\Martin\\Documents\\Python Stuff\\LastReadings.CSV')
-#SP = LastData[3]
+# If sql data is lost, substitute local values
 
 # Read Current Temperature
-PV = getCPUtemp()
+PV = TISensor.readTemperature()
 print('PV = '+str(PV))
-
-#PV = float(input("what's the temp man? "))
 
 # Determine Current Temperature Band
 if PV > (SP + HighDevTP):
@@ -116,16 +138,6 @@ else:
 print('TempBand = '+str(TempBand))
 print('ControllerOP = '+str(ControllerOP))
 
-# Setup IO
-# GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(TIGP,GPIO.IN) # TI
-GPIO.setup(HtrGP,GPIO.OUT) # Heating
-GPIO.setup(ClrGP,GPIO.OUT) # Cooling
-GPIO.setup(RedGP,GPIO.OUT) # Red LED
-GPIO.setup(GrnGP,GPIO.OUT) # Green LED
-GPIO.setup(BluGP,GPIO.OUT) # Blue LED
-
 # Drive LEDS
 if TempBand > 0:
     SetLED('Red')
@@ -143,7 +155,6 @@ else:
     SetOP('None')
 
 # Determine Current Time Period
-now = datetime.now()
 dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
 TimePeriod = 1 #Fermenting
 Duration = now - StartTime
@@ -154,7 +165,10 @@ elif Duration.seconds > BottleTime:
 print('TimePeriod = '+str(TimePeriod))
 
 # Prompt Time Actions
-# Append the  New DataLine to File (Time, Temperature, SP, TempBand, TimePeriod)
-NewData = dt_string + ", " + str(PV) + ", " + str(SP) + ", " + str(ControllerOP) + ", " + str(TimePeriod)
+
+# Write the New DataLine to the local File (Time, id, Temperature, SP, TempBand, TimePeriod)
+NewData = dt_string + ", " + str(BrewID) + ", " + str(PV) + ", " + str(SP) + ", " + str(ControllerOP) + ", " + str(TimePeriod)
 WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
-WritePreviousRecord(FilePath + 'AllReadings.csv',"\n"+NewData,"a")
+
+# Append the New DataLine to the sql database (Time, Temperature, SP, TempBand, TimePeriod)
+BrewData.writeCurrentStatus(PV, ControllerOP, TimePeriod)
