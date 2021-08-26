@@ -59,6 +59,6 @@ class BrewingDatabase:
 		try:
 			cursor = self._connection.cursor()
 			query = "INSERT INTO timeseries (id, temperature, set_point, is_heating) VALUES (%s, %s, %s, %s)"
-			cursor.execute(query, (self._brewID, temperature, self.setpoint, isHeating))
+			cursor.execute(query, (self._brewID, temperature, self._setpoint, isHeating))
 		finally:
 			cursor.close()
