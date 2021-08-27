@@ -34,15 +34,6 @@ import RPi.GPIO as GPIO
 from datetime import datetime
 from datetime import timedelta
 
-# Setup IO
-#GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(HtrGP,GPIO.OUT) # Heating
-GPIO.setup(ClrGP,GPIO.OUT) # Cooling
-GPIO.setup(RedGP,GPIO.OUT) # Red LED
-GPIO.setup(GrnGP,GPIO.OUT) # Green LED
-GPIO.setup(BluGP,GPIO.OUT) # Blue LED
-
 # Variable Declarations
 FilePath = str(Path.home()) + '/brew/'
 now = datetime.now()
@@ -51,6 +42,15 @@ GrnGP = 15
 BluGP = 18
 HtrGP = 2
 ClrGP = 3
+
+# Setup IO
+#GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(HtrGP,GPIO.OUT) # Heating
+GPIO.setup(ClrGP,GPIO.OUT) # Cooling
+GPIO.setup(RedGP,GPIO.OUT) # Red LED
+GPIO.setup(GrnGP,GPIO.OUT) # Green LED
+GPIO.setup(BluGP,GPIO.OUT) # Blue LED
 
 # Function Declarations
 def WritePreviousRecord(FileName, DataStr, TypeStr):
