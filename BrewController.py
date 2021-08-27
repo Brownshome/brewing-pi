@@ -7,6 +7,23 @@
 # Data for the brew including the setpoint, timings, and control settings are retrieved from a master database.
 # A local copy of these values is stored in case the link to the external database is lost
 # Each program scan, the temperature and control data is output back to an sql database
+#
+# Data Flow
+#    Local Name        |        Description
+#-----------------------------------------------------------------------------------------------------
+#   id, setpoint       |   Read from Brew Record, Output to local record, and to sql TimeSeries. 
+#                      |   Not passed to sql write function, as it is local to that function.
+#----------------------|------------------------------------------------------------------------------
+# deadbands for alarms |   Read from Brew Record, Output to local record, and to sql TimeSeries. 
+#   and controller,    | 
+# brew timer period    |
+#     durations,       |
+#  brew start time     |
+#----------------------|------------------------------------------------------------------------------
+# Actual Temperature,  |    Derrived from controller program or read from GPIO. 
+# Heater and Cooler OP |    Stored to sql TimeSeries, and to local storage, 
+#     Brew Period      |    as a local backup in case the sql is lost
+
 
 import os
 import csv
@@ -59,20 +76,13 @@ def SetOP(ContrlMode):
         GPIO.output(ClrGP,0)
 
 # Setup IO
-# GPIO.setwarnings(False)
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(HtrGP,GPIO.OUT) # Heating
 GPIO.setup(ClrGP,GPIO.OUT) # Cooling
 GPIO.setup(RedGP,GPIO.OUT) # Red LED
 GPIO.setup(GrnGP,GPIO.OUT) # Green LED
 GPIO.setup(BluGP,GPIO.OUT) # Blue LED
-
-#def ReadPreviousRecord(FileName):
-#    with open(FileName) as csvfile:
-#        csvreader = csv.reader(csvfile, delimiter=',')
-#        for row in csvreader:
-#            csvrow = .join(row)
-#    return csvrow
 
 # Read Brew Data from File (id, brew_name, start_time, sg_sample_time, bottle_time, set_point, deadband_high, deadband_low, high_trip_point, low_trip_point)
 # If this File is not Found, run NewBatch.py to Start a new brew
@@ -97,12 +107,12 @@ with Sql.BrewingDatabase() as BrewData:
     LowDevTP = float(BrewData.low_trip_point())
     print('LowDevTP = '+str(LowDevTP))
 
-# Read Previous Record from local file (Time, id, Temperature, SP, TempBand, TimePeriod)
+# Read Previous Record from local file (StartTime, id, Temperature, SP, TempBand, TimePeriod)
 with open(FilePath + 'LastReadings.csv') as csvfile:
     csvreader = csv.reader(csvfile, delimiter=',')
     for row in csvreader:
-        Oldid = row[1]
-        print('Oldid = '+str(Oldid))
+        OldST = row[0]
+        print('Oldid = '+str(OldST))
         OldSP = row[3]
         print('OldSP = '+str(OldSP))
         OldOP = int(row[4])
@@ -167,7 +177,7 @@ print('TimePeriod = '+str(TimePeriod))
 # Prompt Time Actions
 
 # Write the New DataLine to the local File (Time, id, Temperature, SP, TempBand, TimePeriod)
-NewData = dt_string + ", " + str(BrewID) + ", " + str(PV) + ", " + str(SP) + ", " + str(ControllerOP) + ", " + str(TimePeriod)
+NewData = StartTime + ", " + str(BrewID) + ", " + str(PV) + ", " + str(SP) + ", " + str(ControllerOP) + ", " + str(TimePeriod)
 WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
 
 # Append the New DataLine to the sql database (Time, Temperature, SP, TempBand, TimePeriod)

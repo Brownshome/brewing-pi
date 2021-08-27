@@ -26,8 +26,7 @@ class BrewingDatabase:
 			
 			currentBrew = self._readCurrentBrew()
 			if currentBrew != None:
-				self._brewID, self._setpoint = currentBrew
-			
+				self._brewID, self._start_time, self._sg_sample_time, self._bottle_time, self._setpoint, self._deadband_high, self._deadband_low, self._high_trip_point, self._low_trip_point = currentBrew
 			return self
 		except:
 			self.__exit__(*sys.exc_info())

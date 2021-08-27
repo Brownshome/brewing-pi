@@ -15,12 +15,12 @@ There is a commited version which is not the same as the one in the folder
 `Git commit` - add the changes into the git tree
 
 ## Tasks to do
-Add temperature sensor into controller
+Add temperature sensor into controller......................................done
 Select GPIO for outputs	....................................................done
 Setup cron job
-Change allreadings to NAS
-Add fields into NAS SQL
-Interface Brew Controller with NAS batch data
+Change allreadings to NAS...................................................done
+Add fields into NAS SQL.....................................................done
+Interface Brew Controller with NAS batch data...............................done
 Develop web page	- trend
 					- setup buttons
 					- space for taste notes
