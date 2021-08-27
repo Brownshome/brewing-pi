@@ -44,7 +44,6 @@ GPIO.setup(GrnGP,GPIO.OUT) # Green LED
 GPIO.setup(BluGP,GPIO.OUT) # Blue LED
 
 # Variable Declarations
-TISensor = TemperatureSensor.TemperatureSensor()
 FilePath = str(Path.home()) + '/brew/'
 now = datetime.now()
 RedGP = 14
@@ -123,6 +122,7 @@ with open(FilePath + 'LastReadings.csv') as csvfile:
 # If sql data is lost, substitute local values
 
 # Read Current Temperature
+TISensor = TemperatureSensor.TemperatureSensor()
 PV = TISensor.readTemperature()
 print('PV = '+str(PV))
 
