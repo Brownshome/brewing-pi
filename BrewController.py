@@ -174,6 +174,7 @@ elif Duration > BottleTime:
 else:
     TimePeriod = 1 #Fermenting
 print('TimePeriod = '+str(TimePeriod))
+print('TimeStamp = '+str(now))
 
 # Prompt Time Actions
 
