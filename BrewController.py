@@ -34,6 +34,15 @@ import RPi.GPIO as GPIO
 from datetime import datetime
 from datetime import timedelta
 
+# Setup IO
+#GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(HtrGP,GPIO.OUT) # Heating
+GPIO.setup(ClrGP,GPIO.OUT) # Cooling
+GPIO.setup(RedGP,GPIO.OUT) # Red LED
+GPIO.setup(GrnGP,GPIO.OUT) # Green LED
+GPIO.setup(BluGP,GPIO.OUT) # Blue LED
+
 # Variable Declarations
 TISensor = TemperatureSensor.TemperatureSensor()
 FilePath = str(Path.home()) + '/brew/'
@@ -74,15 +83,6 @@ def SetOP(ContrlMode):
     else:
         GPIO.output(HtrGP,0)
         GPIO.output(ClrGP,0)
-
-# Setup IO
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(HtrGP,GPIO.OUT) # Heating
-GPIO.setup(ClrGP,GPIO.OUT) # Cooling
-GPIO.setup(RedGP,GPIO.OUT) # Red LED
-GPIO.setup(GrnGP,GPIO.OUT) # Green LED
-GPIO.setup(BluGP,GPIO.OUT) # Blue LED
 
 # Read Brew Data from File (id, brew_name, start_time, sg_sample_time, bottle_time, set_point, deadband_high, deadband_low, high_trip_point, low_trip_point)
 # If this File is not Found, run NewBatch.py to Start a new brew
