@@ -55,9 +55,6 @@ class BrewingDatabase:
 	def start_time(self):
 		return self._start_time
 	
-	def set_point(self):
-		return self._setpoint
-	
 	def deadband_high(self):
 		return self._deadband_high
 	

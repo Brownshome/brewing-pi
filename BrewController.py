@@ -87,7 +87,7 @@ def SetOP(ContrlMode):
 # If this File is not Found, run NewBatch.py to Start a new brew
 #BatchData = ReadPreviousRecord('C:\\Users\\Martin\\Documents\\Python Stuff\\ThisBatch.CSV')
 with Sql.BrewingDatabase() as BrewData:
-    BrewID = int(BrewData.id())
+    BrewID = int(BrewData.BrewID())
     print('ID = '+str(BrewID))
     SGSamplesec = float(BrewData.sg_sample_time()) * 86400
     print('SGSamplesec = '+str(SGSamplesec))
@@ -95,7 +95,7 @@ with Sql.BrewingDatabase() as BrewData:
     print('BottleTime = '+str(BottleTime))
     StartTime = datetime.strptime(BrewData.start_time(), "%d/%m/%Y %H:%M:%S")
     print('StartTime = '+str(StartTime))
-    SP = float(BrewData.set_point())
+    SP = float(BrewData.setpoint())
     print('SP = '+str(SP))
     dbHigh = float(BrewData.deadband_high())
     print('dbHigh = '+str(dbHigh))
