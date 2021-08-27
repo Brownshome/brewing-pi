@@ -35,6 +35,7 @@ from datetime import datetime
 from datetime import timedelta
 
 # Variable Declarations
+#FilePath = "C:\\Users\\Martin\\Documents\\Python Stuff\\"
 FilePath = str(Path.home()) + '/brew/'
 now = datetime.now()
 RedGP = 14
@@ -89,11 +90,11 @@ def SetOP(ContrlMode):
 with Sql.BrewingDatabase() as BrewData:
     BrewID = int(BrewData.BrewID())
     print('ID = '+str(BrewID))
-    SGSamplesec = float(BrewData.sg_sample_time()) * 86400
-    print('SGSamplesec = '+str(SGSamplesec))
-    BottleTimesec = float(BrewData.bottle_time()) * 86400
+    SGSampleTime = BrewData.sg_sample_time()
+    print('SGSamplesec = '+str(SGSampleTime))
+    BottleTime = BrewData.bottle_time()
     print('BottleTime = '+str(BottleTime))
-    StartTime = datetime.strptime(BrewData.start_time(), "%d/%m/%Y %H:%M:%S")
+    StartTime = BrewData.start_time()
     print('StartTime = '+str(StartTime))
     SP = float(BrewData.setpoint())
     print('SP = '+str(SP))
@@ -165,20 +166,21 @@ else:
     SetOP('None')
 
 # Determine Current Time Period
-dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-TimePeriod = 1 #Fermenting
 Duration = now - StartTime
-if Duration.seconds > SGSamplesec:
+if Duration > SGSampleTime:
     TimePeriod = 2 #Sampling
-elif Duration.seconds > BottleTime:
+elif Duration > BottleTime:
     TimePeriod = 3 #Bottling
+else:
+    TimePeriod = 1 #Fermenting
 print('TimePeriod = '+str(TimePeriod))
 
 # Prompt Time Actions
 
 # Write the New DataLine to the local File (Time, id, Temperature, SP, TempBand, TimePeriod)
-NewData = StartTime + ", " + str(BrewID) + ", " + str(PV) + ", " + str(SP) + ", " + str(ControllerOP) + ", " + str(TimePeriod)
+NewData = StartTime.strftime("%d/%m/%Y %H:%M:%S") + ", " + str(BrewID) + ", " + str(PV) + ", " + str(SP) + ", " + str(ControllerOP) + ", " + str(TimePeriod)
 WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
 
 # Append the New DataLine to the sql database (Time, Temperature, SP, TempBand, TimePeriod)
-BrewData.writeCurrentStatus(PV, ControllerOP, TimePeriod)
+with Sql.BrewingDatabase() as BrewData:
+    BrewData.writeCurrentStatus(PV, ControllerOP, TimePeriod)
