@@ -77,11 +77,11 @@ class BrewingDatabase:
 		finally:
 			cursor.close()
 	
-	def writeCurrentStatus(self, temperature, controller_op, brew_stage):
+	def writeCurrentStatus(self, time_stamp, temperature, controller_op, brew_stage):
 		"""Writes the temperature and brew data to the database"""
 		try:
 			cursor = self._connection.cursor()
-			query = "INSERT INTO timeseries (id, temperature, set_point, controller_op, brew_stage) VALUES (%s, %s, %s, %s, %s)"
-			cursor.execute(query, (self._brewID, temperature, self._setpoint, controller_op, brew_stage))
+			query = "INSERT INTO timeseries (id, time_stamp, temperature, set_point, controller_op, brew_stage) VALUES (%s, %s, %s, %s, %s)"
+			cursor.execute(query, (self._brewID, time_stamp, temperature, self._setpoint, controller_op, brew_stage))
 		finally:
 			cursor.close()

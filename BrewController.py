@@ -183,4 +183,4 @@ WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
 
 # Append the New DataLine to the sql database (Time, Temperature, SP, TempBand, TimePeriod)
 with Sql.BrewingDatabase() as BrewData:
-    BrewData.writeCurrentStatus(PV, ControllerOP, TimePeriod)
+    BrewData.writeCurrentStatus(now, PV, ControllerOP, TimePeriod)
