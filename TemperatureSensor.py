@@ -25,3 +25,9 @@ class TemperatureSensor:
 				raise RuntimeException('Invalid CRC')
 			number = file.readline().partition('t=')[2]
 			return float(number) / 1000.0
+
+if __name__ == "__main__":
+	GPIO.setmode(GPIO.BCM)
+	TISensor = TemperatureSensor()
+	PV = TISensor.readTemperature()
+	print('PV = '+str(PV))

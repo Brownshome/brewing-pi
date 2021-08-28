@@ -17,7 +17,7 @@ There is a commited version which is not the same as the one in the folder
 ## Tasks to do
 Add temperature sensor into controller......................................done
 Select GPIO for outputs	....................................................done
-Setup cron job
+Setup cron job..............................................................done
 Change allreadings to NAS...................................................done
 Add fields into NAS SQL.....................................................done
 Interface Brew Controller with NAS batch data...............................done
