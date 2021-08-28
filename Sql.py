@@ -26,7 +26,7 @@ class BrewingDatabase:
 			
 			currentBrew = self._readCurrentBrew()
 			if currentBrew != None:
-				self._brewID, self._start_time, self._sg_sample_time, self._bottle_time, self._setpoint, self._deadband_high, self._deadband_low, self._high_trip_point, self._low_trip_point = currentBrew
+				self._brewID, self._start_time, self._sg_sample_time, self._bottle_time, self._setpoint, self._deadband_high, self._deadband_low, self._high_trip_point, self._low_trip_point, self._sq_reading = currentBrew
 			return self
 		except:
 			self.__exit__(*sys.exc_info())
@@ -71,7 +71,7 @@ class BrewingDatabase:
 		"""Reads the current brewing settings, this will return None if the brewing is not currently enabled"""
 		try:
 			cursor = self._connection.cursor()
-			query = "SELECT id, start_time, sg_sample_time, bottle_time, set_point, deadband_high, deadband_low, high_trip_point, low_trip_point FROM brews WHERE end_time IS NULL"
+			query = "SELECT id, start_time, sg_sample_time, bottle_time, set_point, deadband_high, deadband_low, high_trip_point, low_trip_point, sg_reading FROM brews WHERE end_time IS NULL"
 			cursor.execute(query)
 			return cursor.fetchone()
 		finally:
@@ -81,7 +81,7 @@ class BrewingDatabase:
 		"""Writes the temperature and brew data to the database"""
 		try:
 			cursor = self._connection.cursor()
-			query = "INSERT INTO timeseries (id, time, temperature, set_point, controller_op, brew_stage) VALUES (%s, %s, %s, %s, %s, %s)"
-			cursor.execute(query, (self._brewID, time_stamp, temperature, self._setpoint, controller_op, brew_stage))
+			query = "INSERT INTO timeseries (id, time, temperature, set_point, controller_op, brew_stage, sg) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+			cursor.execute(query, (self._brewID, time_stamp, temperature, self._setpoint, controller_op, brew_stage, self._sg_reading))
 		finally:
 			cursor.close()
