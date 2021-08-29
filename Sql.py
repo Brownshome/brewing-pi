@@ -4,7 +4,7 @@ import sys
 import mysql.connector
 
 class BrewingDatabase:
-    def __init__(self, username = 'brewing_pi', host = '10.1.1.08', database = 'brewing'):
+    def __init__(self, username = 'brewing_pi', host = '10.1.1.10', database = 'brewing'):
         self._username = username
         self._host = host
         self._database = database

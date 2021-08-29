@@ -114,6 +114,7 @@ except FileNotFoundError: # Turn off control
 #BatchData = ReadPreviousRecord('C:\\Users\\Martin\\Documents\\Python Stuff\\ThisBatch.CSV')
 try:
     with Sql.BrewingDatabase() as BrewData:
+        noSql = False
         if not BrewData.isBrewRunning(): # no brew running so dont control
             NewData = ", " + str(0) + ", , , ,"
             WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
