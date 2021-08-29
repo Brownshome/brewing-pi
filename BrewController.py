@@ -72,6 +72,10 @@ def SetLED(LEDColour):
         GPIO.output(RedGP,0)
         GPIO.output(GrnGP,0)
         GPIO.output(BluGP,1)
+    if LEDColour == 'Alarm':
+        GPIO.output(RedGP,1)
+        GPIO.output(GrnGP,1)
+        GPIO.output(BluGP,1)
 
 def SetOP(ContrlMode):
     if ContrlMode == 'Heat':
@@ -84,43 +88,66 @@ def SetOP(ContrlMode):
         GPIO.output(HtrGP,0)
         GPIO.output(ClrGP,0)
 
+# Read Previous Record from local file (StartTime, id, Temperature, SP, TempBand, TimePeriod)
+try:
+    with open(FilePath + 'LastReadings.csv') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=',')
+        for row in csvreader:
+            OldST = datetime.strptime(row[0],"%d/%m/%Y %H:%M:%S")
+            OldID = int(row[1])
+            OldSP = float(row[3])
+            OldOP = int(row[4])
+            OldTP = int(row[5])
+            Old_HighDevTP = float(row[6])
+            Old_dbHigh = float(row[7])
+            Old_dbLow = float(row[8])
+            Old_LowDevTP = float(row[9])
+
+except FileNotFoundError: # Turn off control
+    ControllerOP = 0
+    SetOP('None')
+    SetLED('Alarm')
+    exit()
+
 # Read Brew Data from File (id, brew_name, start_time, sg_sample_time, bottle_time, set_point, deadband_high, deadband_low, high_trip_point, low_trip_point)
 # If this File is not Found, run NewBatch.py to Start a new brew
 #BatchData = ReadPreviousRecord('C:\\Users\\Martin\\Documents\\Python Stuff\\ThisBatch.CSV')
-with Sql.BrewingDatabase() as BrewData:
-    BrewID = int(BrewData.BrewID())
-    print('ID = '+str(BrewID))
-    SGSampleTime = BrewData.sg_sample_time()
-    print('SGSamplesec = '+str(SGSampleTime))
-    BottleTime = BrewData.bottle_time()
-    print('BottleTime = '+str(BottleTime))
-    StartTime = BrewData.start_time()
-    print('StartTime = '+str(StartTime))
-    SP = float(BrewData.setpoint())
-    print('SP = '+str(SP))
-    dbHigh = float(BrewData.deadband_high())
-    print('dbHigh = '+str(dbHigh))
-    dbLow = float(BrewData.deadband_low())
-    print('dbLow = '+str(dbLow))
-    HighDevTP = float(BrewData.high_trip_point())
-    print('HighDevTP = '+str(HighDevTP))
-    LowDevTP = float(BrewData.low_trip_point())
-    print('LowDevTP = '+str(LowDevTP))
-
-# Read Previous Record from local file (StartTime, id, Temperature, SP, TempBand, TimePeriod)
-with open(FilePath + 'LastReadings.csv') as csvfile:
-    csvreader = csv.reader(csvfile, delimiter=',')
-    for row in csvreader:
-        OldST = row[0]
-        print('Oldid = '+str(OldST))
-        OldSP = row[3]
-        print('OldSP = '+str(OldSP))
-        OldOP = int(row[4])
-        print('OldOP = '+str(OldOP))
-        OldTP = int(row[5])
-        print('OldTP = '+str(OldTP))
-
-# If sql data is lost, substitute local values
+try:
+    with Sql.BrewingDatabase() as BrewData:
+        if not BrewData.isBrewRunning(): # no brew running so dont control
+            NewData = ", " + str(0) + ", , , ,"
+            WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
+            exit()
+        BrewID = int(BrewData.BrewID())
+        print('ID = '+str(BrewID))
+        SGSampleTime = BrewData.sg_sample_time()
+        print('SGSamplesec = '+str(SGSampleTime))
+        BottleTime = BrewData.bottle_time()
+        print('BottleTime = '+str(BottleTime))
+        StartTime = BrewData.start_time()
+        print('StartTime = '+str(StartTime))
+        SP = float(BrewData.setpoint())
+        print('SP = '+str(SP))
+        dbHigh = float(BrewData.deadband_high())
+        print('dbHigh = '+str(dbHigh))
+        dbLow = float(BrewData.deadband_low())
+        print('dbLow = '+str(dbLow))
+        HighDevTP = float(BrewData.high_trip_point())
+        print('HighDevTP = '+str(HighDevTP))
+        LowDevTP = float(BrewData.low_trip_point())
+        print('LowDevTP = '+str(LowDevTP))
+except RuntimeError as err: # If sql data is not available, substitute local values
+    if OldID == 0: 
+        exit()
+    BrewID = OldID
+    SP = OldSP
+    StartTime = OldST
+    TimePeriod = OldTP
+    HighDevTP = Old_HighDevTP
+    dbHigh = Old_dbHigh
+    dbLow = Old_dbLow
+    LowDevTP = Old_LowDevTP
+    noSql = True
 
 # Read Current Temperature
 TISensor = TemperatureSensor.TemperatureSensor()
@@ -166,20 +193,24 @@ else:
     SetOP('None')
 
 # Determine Current Time Period
-Duration = now - StartTime
-if Duration > SGSampleTime:
-    TimePeriod = 2 #Sampling
-elif Duration > BottleTime:
-    TimePeriod = 3 #Bottling
-else:
-    TimePeriod = 1 #Fermenting
+if not noSql:
+    Duration = now - StartTime
+    if Duration > SGSampleTime:
+        TimePeriod = 2 #Sampling
+    elif Duration > BottleTime:
+        TimePeriod = 3 #Bottling
+    else:
+        TimePeriod = 1 #Fermenting
 print('TimePeriod = '+str(TimePeriod))
 print('TimeStamp = '+str(now))
 
 # Prompt Time Actions
 
 # Write the New DataLine to the local File (Time, id, Temperature, SP, TempBand, TimePeriod)
-NewData = StartTime.strftime("%d/%m/%Y %H:%M:%S") + ", " + str(BrewID) + ", " + str(PV) + ", " + str(SP) + ", " + str(ControllerOP) + ", " + str(TimePeriod)
+NewData = StartTime.strftime("%d/%m/%Y %H:%M:%S")
+NewData = NewData + ", " + str(BrewID) + ", " + str(PV) + ", " + str(SP)
+NewData = NewData + ", " + str(ControllerOP) + ", " + str(TimePeriod)
+NewData = NewData + ", " + str(HighDevTP) + ", " + str(dbHigh) + ", " + str(dbLow) + ", " + str(LowDevTP)
 WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
 
 # Append the New DataLine to the sql database (Time, Temperature, SP, TempBand, TimePeriod)
