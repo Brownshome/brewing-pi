@@ -76,6 +76,10 @@ def SetLED(LEDColour):
         GPIO.output(RedGP,1)
         GPIO.output(GrnGP,1)
         GPIO.output(BluGP,1)
+    if LEDColour == 'Off':
+        GPIO.output(RedGP,0)
+        GPIO.output(GrnGP,0)
+        GPIO.output(BluGP,0)
 
 def SetOP(ContrlMode):
     if ContrlMode == 'Heat':
@@ -118,6 +122,9 @@ try:
         if not BrewData.isBrewRunning(): # no brew running so dont control
             NewData = ", " + str(0) + ", , , ,"
             WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
+            ControllerOP = 0
+            SetOP('None')
+            SetLED('Off')
             exit()
         BrewID = int(BrewData.BrewID())
         print('ID = '+str(BrewID))
