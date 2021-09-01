@@ -83,14 +83,14 @@ def SetLED(LEDColour):
 
 def SetOP(ContrlMode):
     if ContrlMode == 'Heat':
-        GPIO.output(HtrGP,1)
-        GPIO.output(ClrGP,0)
-    elif ContrlMode == 'Cool':
         GPIO.output(HtrGP,0)
         GPIO.output(ClrGP,1)
-    else:
-        GPIO.output(HtrGP,0)
+    elif ContrlMode == 'Cool':
+        GPIO.output(HtrGP,1)
         GPIO.output(ClrGP,0)
+    else:
+        GPIO.output(HtrGP,1)
+        GPIO.output(ClrGP,1)
 
 # Read Previous Record from local file (StartTime, id, Temperature, SP, TempBand, TimePeriod)
 try:
