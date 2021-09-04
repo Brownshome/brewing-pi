@@ -117,6 +117,8 @@ try:
                 if OldID > 0:
                     print('OldST = '+str(OldST))
                     print('OldSP = '+str(OldSP))
+                    print('OldOP = '+str(OldOP))
+                    print('OldTP = '+str(OldTP))
                     print('Old_dbHigh = '+str(Old_dbHigh))
                     print('Old_dbLow = '+str(Old_dbLow))
                     print('Old_HighDevTP = '+str(Old_HighDevTP))
@@ -124,7 +126,7 @@ try:
 
 except FileNotFoundError: # Turn off control
     OldID = 0
-    ControllerOP = 0
+    OldOP = 0
     if __name__ == "__main__":
         print('Local record not read')
         print('OldID = '+str(OldID))

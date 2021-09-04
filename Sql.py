@@ -71,7 +71,7 @@ class BrewingDatabase:
         """Reads the current brewing settings, this will return None if the brewing is not currently enabled"""
         try:
             cursor = self._connection.cursor()
-            query = "SELECT id, start_time, sg_sample_time, bottle_time, set_point, deadband_high, deadband_low, high_trip_point, low_trip_point, sg_reading FROM brews WHERE end_time IS NULL"
+            query = "SELECT id, start_time, sg_sample_time, bottle_time, set_point, deadband_high, deadband_low, high_trip_point, low_trip_point, sg_reading FROM brews WHERE end_time IS NULL AND start_time IS NOT NULL"
             cursor.execute(query)
             return cursor.fetchone()
         finally:
