@@ -83,7 +83,6 @@ def SetLED(LEDColour):
     if __name__ == "__main__":
         print("LEDs set to " + LEDColour)
 
-
 def SetOP(ContrlMode):
     if ContrlMode == 'Heat':
         GPIO.output(HtrGP,0)
@@ -169,7 +168,7 @@ except RuntimeError as err: # If sql data is not available, substitute local val
             SetLED('Alarm')
             SetOP('None')
             print('SQL not read, and no local record, exiting')
-            exit
+            exit()
     BrewID = OldID
     SP = OldSP
     StartTime = OldST
@@ -184,9 +183,16 @@ except RuntimeError as err: # If sql data is not available, substitute local val
 
 # Read Current Temperature
 TISensor = TemperatureSensor.TemperatureSensor()
-PV = TISensor.readTemperature()
-if __name__ == "__main__":
-    print('PV = '+str(PV))
+try:
+    PV = TISensor.readTemperature()
+    if __name__ == "__main__":
+        print('PV = '+str(PV))
+except RuntimeError as err:
+    SetLED('Error')
+    SetOP('None')
+    if __name__ == "__main__":
+        print('No Temperature read, exiting')
+    exit()
 
 # Determine Current Temperature Band
 if PV > (SP + HighDevTP):
@@ -248,7 +254,7 @@ NewData = NewData + ", " + str(HighDevTP) + ", " + str(dbHigh) + ", " + str(dbLo
 WritePreviousRecord(FilePath + 'LastReadings.csv',NewData,"w")
 
 if __name__ == "__main__":
-    exit
+    exit()
 
 # Append the New DataLine to the sql database (Time, Temperature, SP, TempBand, TimePeriod)
 with Sql.BrewingDatabase() as BrewData:

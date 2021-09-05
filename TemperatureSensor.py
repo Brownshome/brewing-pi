@@ -1,3 +1,4 @@
+#!/bin/env python3
 # Controls the temperature sensor (DS18B20)
 
 import os
@@ -17,13 +18,25 @@ class TemperatureSensor:
 		GPIO.setup(4, GPIO.IN, pull_up_down = pullState)
 		self._deviceID = _findDeviceId(family)
 		if self._deviceID == None:
-			raise RuntimeException('Unable to find temperature sensor')
+			raise RuntimeError('Unable to find temperature sensor')
+	
+	def readLine(self, file):
+		line = file.readline().strip()
+		retryCount = 0
+		
+		while not line:
+			retryCount += 1
+			if retryCount > 10:
+				raise RuntimeError('No data in file')
+			line = file.readline().strip()
+		
+		return line
 	
 	def readTemperature(self):
 		with io.open(_deviceDirectory + self._deviceID + '/w1_slave', "r") as file:
-			if not file.readline().endswith('YES\n'):
-				raise RuntimeException('Invalid CRC')
-			number = file.readline().partition('t=')[2]
+			if not self.readLine(file).endswith('YES'):
+				raise RuntimeError('Invalid CRC')
+			number = self.readLine(file).partition('t=')[2]
 			return float(number) / 1000.0
 
 if __name__ == "__main__":
