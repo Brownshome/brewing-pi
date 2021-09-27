@@ -125,6 +125,8 @@ try:
                 Old_dbHigh = float(row[7])
                 Old_dbLow = float(row[8])
                 Old_LowDevTP = float(row[9])
+            if OldID == -1:
+                OldST = now
             if __name__ == "__main__":
                 print('OldID = '+str(OldID))
                 if OldID != 0:
